@@ -121,4 +121,51 @@ The **Advanced Peripheral Bus (APB)** is a **low-cost interface** that is part o
 - Actual data transfer occurs  
 - `PREADY` signals when the transfer is complete
 
+## REAL-TIME SCENARIO
 
+This section explains how to toggle an LED connected to a GPIO peripheral using the AMBA APB protocol. The microcontroller communicates with the GPIO peripheral through APB-compliant signals like `PADDR`, `PWRITE`, `PWDATA`, and `PSELx`.
+
+## System Setup
+
+| Signal     | Role                                                                 |
+|------------|----------------------------------------------------------------------|
+| `PADDR`    | Address of GPIO register (e.g., `0x0004` for LED control)            |
+| `PWRITE`   | `1` for write, `0` for read                                           |
+| `PWDATA`   | Data written to GPIO                                                  |
+| `PRDATA`   | Data read from GPIO                                                   |
+| `PSELx`    | Selects the GPIO peripheral                                            |
+| `PENABLE`  | Moves the transfer to the ACCESS phase                                |
+| `PREADY`   | Indicates when the peripheral has completed the operation             |
+
+## Operation 1: Writing to GPIO (Turn ON the LED)
+
+### I. IDLE State
+- `PSELx = 0`: No peripheral is selected.
+- The processor decides to write `0x01` to turn on the LED at address `0x0004`.
+
+### II. SETUP State
+- `PSELx = 1`: GPIO peripheral is selected.
+- `PADDR = 0x0004`: Targeting the GPIO control register.
+- `PWRITE = 1`: Write operation.
+- `PWDATA = 0x01`: Command to turn ON the LED.
+- `PENABLE = 0`: Setup phase is still in progress.
+
+### III. ACCESS State
+- `PENABLE = 1`: Transition to ACCESS phase.
+- The GPIO receives `PWDATA = 0x01` and turns ON the LED.
+- `PREADY = 1`: GPIO peripheral indicates the write is complete.
+
+## Operation 2: Reading GPIO Status (Check if LED is ON)
+
+### I. IDLE to SETUP
+- Processor initiates read: `PSELx = 1`, `PADDR = 0x0004`.
+- `PWRITE = 0`: Read operation.
+- `PENABLE = 0`: Setup phase begins.
+
+### II. SETUP to ACCESS
+- `PENABLE = 1`: Enters ACCESS state.
+- GPIO responds with `PRDATA = 0x01`, confirming LED is ON.
+- `PREADY = 1`: Indicates read data is valid.
+
+### III. Return to IDLE
+- `PSELx = 0`: Transfer complete, back to IDLE state.
