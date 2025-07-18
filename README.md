@@ -78,7 +78,7 @@ The **Advanced Peripheral Bus (APB)** is a **low-cost interface** that is part o
 | Clock Cycles       | Minimum two per transfer (Setup + Enable)                                   |
 | Integration        | Connected via bridge to high-performance buses (e.g., AXI → APB bridge)     |
 
-## Signal Description - 
+## SIGNAL DESCRIPTION - 
 
 ### 1. Basic Signals
 
