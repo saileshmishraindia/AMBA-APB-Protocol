@@ -1,12 +1,28 @@
 # AMBA-APB-Protocol
 This Repository describes the AMBA APB protocol with its flow diagram and operating with cycle graphs.
 
-# Table of Contents
+## 📚 Table of Contents
 
-1. [APB Protocol](#1-apb-protocol)  
-2. [Signal Description](#2-signal-description)  
-3. [State Diagram](#3-state-diagram)  
-4. [Real Time Scenario](#4-real-time-scenario)
+- [Overview](#overview)
+- [Why APB?](#why-apb)
+- [Key Features](#key-features)
+- [Signal Description](#signal-description)
+- [Flow Diagram](#flow-diagram)
+- [Real-World Analogy using 8085](#real-world-analogy-using-8085)
+- [APB Protocol vs AHB/AXI Comparison Table](#apb-protocol-vs-ahbaxi-comparison-table)
+- [Simulation Tool: EPWave](#simulation-tool-epwave)
+- [EPWave Key Observations](#epwave-key-observations)
+- [Testbench Explained](#testbench-explained)
+  - [Signal Setup and DUT Instantiation](#signal-setup-and-dut-instantiation)
+  - [Initialization Phase](#initialization-phase)
+  - [Write Transaction](#write-transaction)
+  - [Read Transaction](#read-transaction)
+- [Design.v Explained](#designv-explained)
+  - [Behavioral Flow](#behavioral-flow)
+  - [FSM Mapping](#fsm-mapping)
+  - [Reset Behavior](#reset-behavior)
+  - [Summary](#summary)
+
 
 ## APB PROTOCOL
 
