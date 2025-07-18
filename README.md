@@ -173,7 +173,7 @@ This section explains how to toggle an LED connected to a GPIO peripheral using 
 
 ## RTL CODE
 
-- **TESTBENCH :**
+- **TESTBENCH.v :**
     
   ```bash
   module apb_tb;
@@ -256,7 +256,222 @@ This section explains how to toggle an LED connected to a GPIO peripheral using 
         $display("Starting APB Testbench Simulation");
         $display("=================================");
     end
+  endmodule
+  ```
+
+- Let's understand the testbench bit-by-bit with reference to the signals description and their corresponding operations.
+- So, the goal of this testbench is to verify the basic functionality of an APB slave, particularly focusing on a single write transaction followed by a single read transaction. This is a fundamental setup that helps us understand how the APB protocol behaves in a non-pipelined fashion, where each transaction completes fully before the next one begins.
+
+- We begin by declaring all the standard APB interface signals:
+
+- **`PCLK`**: The clock signal driving the interface.
+- **`PRESETn`**: An active-low reset that initializes the system.
+- **`PSELx`**: This is the select signal, indicating whether the current slave is targeted by the master.
+- **`PENABLE`**: This indicates the second (enable) phase of the APB transaction.
+- **`PWRITE`**: This determines the direction — high for write, low for read.
+- **`PADDR`**: The 32-bit address bus used to point to memory/register location.
+- **`PWDATA`**: The 32-bit data bus used to send data to the slave (during write).
+- **`PRDATA`**: The data output from the slave (during read).
+- **`PREADY`**: Indicates whether the slave is ready to complete the current transaction.
+
+- Then, We instantiate the DUT (`apb_slave`) and wire up these signals appropriately.  
+
+### I. Initialization Phase
+
+In the `initial` block, we first:
+
+- Drive all the inputs to their default zero state.
+- Assert `PRESETn = 0` to hold the design in reset.
+- Generate a waveform dump via `$dumpfile` and `$dumpvars` for post-simulation analysis using GTKWave or EPWave.
+- After `#5` time units, we deassert the reset (`PRESETn = 1`), allowing the design to begin normal operation.
+
+### II. Read Transaction
+
+Now, we read back from the same address to verify that the write was successful.
+
+#### a. Setup Phase
+
+- Set `PSELx = 1` to select the slave.
+- Set `PWRITE = 0` to indicate a **read**.
+- Set `PADDR = 32'd0` to read from the same location used in the write.
+
+#### b. Enable Phase
+
+- After a short delay, assert `PENABLE = 1`.
+- The slave now places the value stored at `memory[PADDR]` onto `PRDATA`.
+
+#### c. Transaction Completion
+
+- Wait a few time units to simulate bus latency.
+- Deassert `PSELx` and `PENABLE`.
+
+### III. Write Transaction
+
+Next, we perform a **write operation** following the standard APB protocol phases.
+
+#### a. Setup Phase
+
+- Set `PSELx = 1` to select the slave.
+- Set `PWRITE = 1` to indicate it's a write.
+- Provide a valid address: `PADDR = 32'd0`.
+- Provide the write data: `PWDATA = 32'h00001234`.
+
+#### b. Enable Phase (After a Clock Edge)
+
+- After a small delay, assert `PENABLE = 1`.
+- Now, `PSELx = 1`, `PENABLE = 1`, and `PWRITE = 1` — this initiates the **write transfer**.
+- Internally, the slave executes: `memory[PADDR] = PWDATA`.
+
+#### c. Transaction Completion
+
+- After the write has taken place, deassert all control signals:
+  - `PSELx = 0`
+  - `PENABLE = 0`
+  - `PWRITE = 0`
+
+This sequence mimics how a real APB master sets up, enables, and completes a transaction.
+
+So, As all the signals behaved correctly, `PRDATA` will now contain `0x00001234` — confirming the APB slave's read/write functionality.
+
+- **DESIGN.v :**
+
+```bash
+  // DESIGN
+
+module apb_slave (
+    input wire PCLK,          // Clock signal
+    input wire PRESETn,       // Active-low reset signal
+    input wire PSELx,         // Chip select signal
+    input wire PENABLE,       // Enable signal
+    input wire PWRITE,        // Write enable signal
+    input wire [31:0] PADDR,  // Address for memory access
+    input wire [31:0] PWDATA, // Data to be written into memory
+    output reg [31:0] PRDATA, // Data read from memory
+    output reg PREADY         // Ready signal indicating when the module is ready to accept or provide data
+);
+
+  reg [31:0] memory [0:255];  // An array memory of 256 registers (each 32 bits wide) is used to simulate memory storage.
+
+    // READ and WRITE OPERATIONS : - 
+    always @(posedge PCLK or negedge PRESETn) begin
+        if (!PRESETn) begin
+          
+            // Reset state: Clear outputs and set ready signal
+            PRDATA <= 32'd0;
+            PREADY <= 1'b1;
+        end else begin
+            // 1. Normal operation
+            if (PSELx && PENABLE) begin
+                if (PWRITE) begin
+                    // 2. WRITE OPERATION : Store PWDATA into memory at address PADDR
+                    memory[PADDR] <= PWDATA;
+                    PREADY <= 1'b1;
+                end else begin
+                    // 3. READ OPERATION : Load data from memory at address PADDR into PRDATA
+                    PRDATA <= memory[PADDR];
+                    PREADY <= 1'b1;
+                end
+            end else begin
+              // 4. IDLE STATE ( when not selected ) : Set ready signal high
+                PREADY <= 1'b1;
+            end
+        end
+    end
 endmodule
-```
+  ```
 
+- The `apb_slave` module implements a simple memory-mapped slave interface that complies with the **AMBA APB (Advanced Peripheral Bus)** protocol. It supports basic **read** and **write** operations to a simulated memory array using standard APB signals.
 
+### Inputs
+- `PCLK` — Clock signal
+- `PRESETn` — Active-low reset
+- `PSELx` — Slave select
+- `PENABLE` — Transfer phase enable
+- `PWRITE` — Indicates write (`1`) or read (`0`)
+- `PADDR` — Address bus
+- `PWDATA` — Data to be written
+
+### Outputs
+- `PRDATA` — Read data output
+- `PREADY` — Ready signal (indicates transaction completion)
+
+- Internally, a **256 × 32-bit memory array** is declared to act as a simple register space or RAM, The behavior is synchronous to the **rising edge of the clock** and includes **asynchronous reset support**.
+
+- During **reset**, the output data and ready signals are cleared.
+- When both `PSELx` and `PENABLE` are asserted:
+  - If `PWRITE = 1`, the module writes `PWDATA` into `memory[PADDR]`.
+  - If `PWRITE = 0`, it reads `memory[PADDR]` into `PRDATA`.
+- In both cases, `PREADY` is asserted high to indicate the transaction is complete.
+- If the slave is **not selected or not enabled**, the module stays idle but still drives `PREADY = 1`, making it a **zero-wait-state peripheral**.
+
+This minimal design reflects the **fundamental transaction phases** of the APB protocol — `Setup` and `Enable` — and models a **compliant slave peripheral**, useful for:
+- Design Verification (DV)
+- Extension into more complex peripherals like GPIOs or timers
+
+We use an `always` block that triggers on the **rising edge of the clock** or the **falling edge of reset**.
+
+### I. RESET PHASE
+
+If reset is active (`PRESETn = 0`), then we initialize:
+- `PRDATA` to `0`
+- `PREADY` to `1` (saying, “Hey I'm ready after reset”)
+
+### II. NORMAL OPERATION
+
+If `PSELx` is high (we're selected) and `PENABLE` is high (enabled to do work), then we check:
+
+### III. WRITE Operation (`PWRITE = 1`)
+- Take the data from `PWDATA` and store it in `memory[PADDR]`
+- Raise `PREADY` to say “Write done”
+
+### IV. READ Operation (`PWRITE = 0`)
+- Fetch data from `memory[PADDR]` and put it in `PRDATA` to send back
+- Set `PREADY = 1` to say “Read done”
+
+### V. IDLE PHASE (Not Selected)
+
+- Even if nothing's happening, we still keep `PREADY = 1` so the bus doesn’t hang.
+
+###  Port Descriptions
+
+| Port      | Direction | Width   | Description                                                                 |
+|-----------|-----------|---------|-----------------------------------------------------------------------------|
+| `PCLK`    | Input     | 1-bit   | System clock signal. All operations are synchronized on its rising edge.    |
+| `PRESETn` | Input     | 1-bit   | Active-low reset. Resets internal state and outputs.                        |
+| `PSELx`   | Input     | 1-bit   | Slave select signal. Indicates that the slave is being addressed.           |
+| `PENABLE` | Input     | 1-bit   | Enable phase signal. Marks the second phase of the APB protocol.            |
+| `PWRITE`  | Input     | 1-bit   | Determines transfer direction: `1` for write, `0` for read.                 |
+| `PADDR`   | Input     | 32-bit  | Address for memory access.                                                  |
+| `PWDATA`  | Input     | 32-bit  | Data to be written to memory.                                               |
+| `PRDATA`  | Output    | 32-bit  | Data read from memory.                                                      |
+| `PREADY`  | Output    | 1-bit   | Indicates readiness to complete the transfer.        
+
+## RTL SIMULATION 
+
+- EDA Playground (tb.v & design.v)
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7df97200-629a-42bc-82d0-34a11843b165" />
+
+- Output Log
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/ac494670-a098-46e5-9ecc-97131cc13caa" />
+
+- EPWave
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/8e4fb0a5-892e-427b-aefd-8d6222b992e9" />
+
+  ### From the Above EPWave, We observe
+
+- **Reset Phase:** `PRESETn` is low at the start, initializing the slave.
+- **Write Phase:**
+  - `PSELx`, `PENABLE`, and `PWRITE` are high.
+  - `PWDATA = 0x660` is written at address `PADDR = 0`.
+- **Read Phase:**
+  - `PWRITE = 0` while `PSELx` and `PENABLE` stay high.
+  - `PRDATA` outputs the previously written `0x660` showing data integrity.
+- **Memory Verification:**
+  - The `memory[0]` location stores the value `0x660`.
+- **PREADY** remains high, indicating the slave is always ready for transactions.
+
+- **This waveform confirms that the APB slave correctly handles basic read/write operations according to the AMBA APB protocol specification.**
+  
