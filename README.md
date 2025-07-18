@@ -13,9 +13,6 @@ This Repository describes the AMBA APB protocol with its flow diagram and operat
 9. [Signal Setup and DUT Instantiation](#signal-setup-and-dut-instantiation)  
 10. [Simulation Waveform using EPWave](#simulation-waveform-using-epwave)  
 11. [EPWave Key Observations](#epwave-key-observations)  
-12. [Use Cases of APB Protocol](#use-cases-of-apb-protocol)  
-13. [Credits](#credits)  
-
 
 ## APB PROTOCOL
 
