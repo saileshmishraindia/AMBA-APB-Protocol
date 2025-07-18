@@ -1,27 +1,20 @@
 # AMBA-APB-Protocol
 This Repository describes the AMBA APB protocol with its flow diagram and operating with cycle graphs.
 
-## 📚 Table of Contents
-
-- [Overview](#overview)
-- [Why APB?](#why-apb)
-- [Key Features](#key-features)
-- [Signal Description](#signal-description)
-- [Flow Diagram](#flow-diagram)
-- [Real-World Analogy using 8085](#real-world-analogy-using-8085)
-- [APB Protocol vs AHB/AXI Comparison Table](#apb-protocol-vs-ahbaxi-comparison-table)
-- [Simulation Tool: EPWave](#simulation-tool-epwave)
-- [EPWave Key Observations](#epwave-key-observations)
-- [Testbench Explained](#testbench-explained)
-  - [Signal Setup and DUT Instantiation](#signal-setup-and-dut-instantiation)
-  - [Initialization Phase](#initialization-phase)
-  - [Write Transaction](#write-transaction)
-  - [Read Transaction](#read-transaction)
-- [Design.v Explained](#designv-explained)
-  - [Behavioral Flow](#behavioral-flow)
-  - [FSM Mapping](#fsm-mapping)
-  - [Reset Behavior](#reset-behavior)
-  - [Summary](#summary)
+# Table of Contents
+1. [APB Protocol](#apb-protocol)  
+2. [Signal Description](#signal-description)  
+3. [State Diagram](#state-diagram)  
+4. [Real Time Scenario](#real-time-scenario)  
+5. [RTL Design Code](#rtl-design-code)  
+6. [Testbench Code](#testbench-code)  
+7. [Design.v Explained](#designv-explained)  
+8. [Testbench.v Explained](#testbenchv-explained)  
+9. [Signal Setup and DUT Instantiation](#signal-setup-and-dut-instantiation)  
+10. [Simulation Waveform using EPWave](#simulation-waveform-using-epwave)  
+11. [EPWave Key Observations](#epwave-key-observations)  
+12. [Use Cases of APB Protocol](#use-cases-of-apb-protocol)  
+13. [Credits](#credits)  
 
 
 ## APB PROTOCOL
