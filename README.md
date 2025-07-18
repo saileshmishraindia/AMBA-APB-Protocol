@@ -3,7 +3,7 @@ This Repository describes the AMBA APB protocol with its flow diagram and operat
 
 # Table of Contents
 1. [APB Protocol](#apb-protocol)  
-2. [SIGNAL DESCRIPTION](#signal-description)  
+2. [Signal Description](#signal-description)  
 3. [State Diagram](#state-diagram)  
 4. [Real Time Scenario](#real-time-scenario)  
 5. [RTL Design Code](#rtl-design-code)  
@@ -78,7 +78,7 @@ The **Advanced Peripheral Bus (APB)** is a **low-cost interface** that is part o
 | Clock Cycles       | Minimum two per transfer (Setup + Enable)                                   |
 | Integration        | Connected via bridge to high-performance buses (e.g., AXI → APB bridge)     |
 
-## SIGNAL DESCRIPTION - 
+## Signal Description - 
 
 ### 1. Basic Signals
 
